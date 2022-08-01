@@ -11,11 +11,11 @@
 
 ## Summary
 
-This RFC defines a protocol for creating and managing relationships within a group of [agents](https://github.com/hyperledger/aries-rfcs/tree/main/concepts/0004-agents) (n-wise). In a certain sense, this RFC is a generalization of the pairwise concept and protocols [0160-connection-protocol](https://github.com/hyperledger/aries-rfcs/tree/main/features/0160-connection-protocol) and [0023-did-exchange](https://github.com/hyperledger/aries-rfcs/tree/main/features/0023-did-exchange) for an arbitrary number of agents.
+This RFC defines a protocol for creating and managing relationships within a group of SSI subjects (n-wise). In a certain sense, this RFC is a generalization of the pairwise concept and protocols [0160-connection-protocol](https://github.com/hyperledger/aries-rfcs/tree/main/features/0160-connection-protocol) and [0023-did-exchange](https://github.com/hyperledger/aries-rfcs/tree/main/features/0023-did-exchange) for an arbitrary number of parties.
 
 ## Motivation
 
-SSI subjects and agents representing them must have a way to establish relationships with each other in a trustful manner. In the simplest case, when only two agents are involved, this goal is achieved using [0023-did-exchange] protocol (https://github.com/hyperledger/aries-rfcs/blob/main/features/0023-did-exchange/README.md) by creating and securely sharing their DID Documents directly between agents. However, it is often necessary to organize an interaction involving more than two agents. The number of participants of such an interaction may change over time, and most of the agents may be mobile ones. The simplest and most frequently used example of such interaction is group chats in instant messengers. The trusted nature of SSI technology makes it possible to use group relationships to hold legally significant unions, such as board of directors, territorial community or dissertation councils.
+SSI subjects and [agents](https://github.com/hyperledger/aries-rfcs/tree/main/concepts/0004-agents) representing them must have a way to establish relationships with each other in a trustful manner. In the simplest case, when only two agents are involved, this goal is achieved using [0023-did-exchange] protocol (https://github.com/hyperledger/aries-rfcs/blob/main/features/0023-did-exchange/README.md) by creating and securely sharing their DID Documents directly between agents. However, it is often necessary to organize an interaction involving more than two agents. The number of parties of such an interaction may change over time, and most of the agents may be mobile ones. The simplest and most frequently used example of such interaction is group chats in instant messengers. The trusted nature of SSI technology makes it possible to use group relationships to hold legally significant unions, such as board of directors, territorial community or dissertation councils.
 
 ## Tutorial
 
@@ -27,9 +27,9 @@ URI: https://didcomm.org/n-wise/1.0
 
 ### Registry of n-wise states
 
-The current state of n-wise is an up-to-date list of participant's DID Documents. In the case of pairwise, the state is stored by the participants and updated, if necessary, by direct notification of the other party. When there are more than two participants, the problem of synchronizing the state of this n-wise( i.e. [consensus](https://en.wikipedia.org/wiki/Consensus_(computer_science))) arising. It should be borne in mind that the state may change occasionally: users may be added or deleted, DID Documents may be modified (when keys are rotated or endpoints are changed).
+The current state of n-wise is an up-to-date list of parties DID Documents. In the case of pairwise, the state is stored by the participants and updated, if necessary, by direct notification of the other party. When there are more than two participants, the problem of synchronizing the state of this n-wise( i.e. [consensus](https://en.wikipedia.org/wiki/Consensus_(computer_science))) arising. It should be borne in mind that the state may change occasionally: users may be added or deleted, DID Documents may be modified (when keys are rotated or endpoints are changed).
 
-In principle, any trusted repository can act as a registry of n-wise states. The following options for storing the status of participants can be distinguished:
+In principle, any trusted repository can act as a registry of n-wise states. The following options for storing the n-wise state can be distinguished:
 
 - #### Directly on the agent's side
 This approach is closest to [0023-did-exchange] protocol (https://github.com/hyperledger/aries-rfcs/blob/main/features/0023-did-exchange/README.md). However since there are more than two participants, an additional consensus procedure is required to correctly account for changes in the n-wise state. This option is suitable if the participants are represented by cloud agents which are (almost) always online. In this case, a consensus can be established between them by well-known algorithms (RAFT, Paxos, BFT). However, if most of the agents are mobile and are online only occasionally, the mentioned consensus algorithms stop working. So it is preferable to use external solutions for storing and updating states.
@@ -44,7 +44,7 @@ This case is applicable when security requirements allow participants to trust a
 
 The concept of pluggable consensus implies choosing the most appropriate way to maintain a registry of states, depending on the needs.
 
-N-wise state updates are performed by pushing the corresponding transaction to the registry of n-wise states. To get the current n-wise state, the agent receives a list of transactions from the registry of states, verifies them and applies sequentially, starting with `genesisTx`. Incorrect transactions (without a proper signature or not containing the necessary fields) are ignored. This, n-wise can be considered as replicated state machine, that is executed on each participant's agent.
+N-wise state updates are performed by pushing the corresponding transaction to the registry of n-wise states. To get the current n-wise state, the agent receives a list of transactions from the registry of states, verifies them and applies sequentially, starting with `genesisTx`. Incorrect transactions (without a proper signature or not containing the necessary fields) are ignored. This, n-wise can be considered as replicated state machine, that is executed on each participant.
 
 The specifics of recording and receiving transactions depend on the particular method of maintaining the n-wise registry and on the specific ledger. This RFC DOES NOT DEFINE specific state registry implementations.
 
@@ -52,81 +52,187 @@ The specifics of recording and receiving transactions depend on the particular m
 
 * ##### User
 
-The SSI subject taking part in n-wise. Has the right to:
+The party of n-wise. Has the right to:
 
 * Modify its DID Document;
 * Remove himself from n-wise;
-* Invite new participants.
+* Invite new parties.
 
 * ##### Owner
-Creator of the n-wise and the committer of `genesisTx`. In addition to the rights of the user, has the right to:
+In addition to user rights, has the right to:
 * remove other users from n-wise;
-* Modify n-wise metainfo;
+* Modify n-wise meta information;
 * transfer its role to another user.
 
 There can only be one owner in n-wise at a time.
 
+* ##### Creator
+
+Creator of the n-wise and the committer of `genesisTx`. The creator automatically becomes is the owner of n-wise after creation.
+
 * ##### Inviter
 
-The participant who initiates the invitation of a new agent.
+The n-wise party who initiates the invitation of a new agent.
 
 * ##### Invitee
-Агент, принимающий приглашение и подключающийся к n-wise. В случае успеха он становится участником n-wise.
+
+The party accepting the invitation and connecting to n-wise. If successful, the party becomes a user of n-wise.
+
+### N-wise creation
+
+The creation begins with the initialization of the n-wise registry. This RFC DOES NOT SPECIFY the procedure for n-wise registry creation. After creating the registry, the creator pushes `genesisTx` transaction. The creator automatically obtains the owner role. The creator MUST generate a new unique DID and DID Document for n-wise.
+
+### Invitation of the new party
+
+Any n-wise party can create an invitation to join n-wise. First, Inviter generates a pair of public and private invitation keys according to Ed25519. The public key of the invitation is pushed to the registry using `invitationTx` transaction. Then the `Invitation` message with invitation private key is sent out-of-band to the Invitee. The invitation key pair is unique for each Invitee and can only be used once.
+
+### Accepting the invitation
+
+Once the `Invitation' received, the Invite generates a new unique BID and BID Document for the n-wise and pushes `AddParticipantTx` transaction to the registry.
+It is NOT ALLOWED to reuse DID from other relationships.
+
+The process of adding a new participant is shown in the figure below
+
+![](add_participant.png)
+
+### Updating DID Document
+
+Updating the user's DID Document is required for the key rotation or endpoint updating. To update the associated DID Document, user pushes the `updateParticipantTx` transaction to the registry.
 
 > See [this note](https://github.com/hyperledger/aries-rfcs/tree/main/concepts/0003-protocols/roles-participants-etc.md) for definitions of the terms
 "role", "participant", and "party".
 
-Provides a formal name to each role in the protocol, says who and how many can
-play each role, and describes constraints associated with those roles (e.g.,
-"You can only issue a credential if you have a DID on the public ledger"). The
-issue of qualification for roles can also be explored (e.g., "The holder of the
-credential must be known to the issuer").
+### Removing a party form n-wise
 
-The formal names for each role are important because they are used when [agents
-discover one another's
-capabilities](https://github.com/hyperledger/aries-rfcs/tree/main/features/0031-discover-features);
-an agent doesn't just claim that it supports a protocol; it makes a claim about
-which *roles* in the protocol it supports. An agent that supports credential
-issuance and an agent that supports credential holding may have very different
-features, but they both use the _credential-issuance_ protocol. By convention,
-role names use lower-kebab-case and are compared case-sensitively.
+Removing is performed using the `removeParticipantTx` transaction.
+The user can delete himself (the corresponding transaction is signed by the user's public key). The owner can delete any user (the corresponding transaction is signed by the owner's public key).
 
-### States
+Updating n-wise meta information
 
-This section lists the possible states that exist for each role. It also
-enumerates the events (often but not always messages) that can occur, including
-errors, and what should happen to state as a result. A formal representation of
-this information is provided in a _state machine matrix_. It lists events as
-columns, and states as rows; a cell answers the question, "If I am in state X
-(=row), and event Y (=column) occurs, what happens to my state?" The [Tic Tac
-Toe example](https://github.com/hyperledger/aries-rfcs/blob/main/concepts/0003-protocols/tictactoe/README.md#states) is typical.
+Meta information can be updated by the owner using the `updateMetadataTx` transaction.
 
-[Choreography Diagrams](
-https://www.visual-paradigm.com/guide/bpmn/bpmn-orchestration-vs-choreography-vs-collaboration/#bpmn-choreography)
-from [BPMN](http://www.bpmn.org/) are good artifacts here, as are [PUML sequence diagrams](
-http://plantuml.com/sequence-diagram) and [UML-style state machine diagrams](http://agilemodeling.com/artifacts/stateMachineDiagram.htm).
-The matrix form is nice because it forces an exhaustive analysis of every
-possible event. The diagram styles are often simpler to create and consume,
-and the PUML and BPMN forms have the virtue that they can support line-by-line
-diffs when checked in with source code. However, they don't offer an
-easy way to see if all possible flows have been considered; what they may
-NOT describe isn't obvious. This--and the freedom from fancy tools--is why
-the matrix form is used in many early RFCs. We leave it up to
-the community to settle on whether it wants to strongly recommend specific
-diagram types.
+### Transferring the owner role to other party
 
-The formal names for each state are important, as they are used in [`ack`s](https://github.com/hyperledger/aries-rfcs/tree/main/features/0015-acks)
-and [`problem-report`s](https://github.com/hyperledger/aries-rfcs/tree/main/features/0035-report-problem)).
-For example, a `problem-report` message declares which state the sender
-arrived at because of the problem. This helps other participants
-to react to errors with confidence. Formal state names are also used in the
-agent test suite, in log messages, and so forth.
+The owner can transfer control of n-wise to another n-wise party. The old owner loses the corresponding privileges and becomes a regular user. The operation is performed using the `NewOwnerTx` transaction.
 
-By convention, state names use lower-kebab-case. They are compared
-case-sensitively.
+### Notification on n-wise state update
 
-State management in protocols is a deep topic. For more information, please
-see [State Details and State Machines](https://github.com/hyperledger/aries-rfcs/blob/main/concepts/0003-protocols/state-details.md).
+Just after pushing the transaction to the n-wise registry, the participant MUST send `LedgerUpdateNotify` message to all other parties.
+The participant who received `LedgerUpdateNotify` SHOULD get the current status from the n-wise registry.
+
+### DIDComm messaging within n-wise
+
+It is allowed to exchange DIDComm messages of any type within n-wise.
+The belonging of the sender to a certain n-wise is determined by the sender's verkey.
+
+This RFC DOES NOT DEFINE a procedure of exchanging messages within n-wise. In the simplest case, this can be implemented as sending a message to each participant in turn. In case of a large number of parties, it is advisable to consider using a centralized coordinator who would be responsible for the ordering and guaranteed sending of messages from the sender to the rest of parties.
+
+## Reference
+
+### N-wise registry transactions
+
+N-wise state is modified using transactions.
+
+```json
+{
+  "type": "transaction type",
+  ...
+  "proof" {
+    "type": "JcsEd25519Signature2020",
+    "verificationMethod": "did:alice#key1",
+    "signatureValue": "..."
+
+  }
+}
+
+#### Attributes
+* `type` - required attribute, type of transaction;
+* `proof` - required attribute, transaction signature in [JSON-LD Proof](https://w3c-ccg.github.io/data-integrity-spec/) format;
+* `verificationMethod` - required attribute, depends on the specific type of transaction and is defined below.
+
+### GenesisTx
+
+'GenesisTx' is a mandatory initial transaction that defines the basic properties of n-wise.
+
+```json
+{
+  "type": "genesisTx",
+  "label": "Council",
+  "creatorNickName": "Alice",
+  "creatorDid": "did:alice",
+  "creatorDidDoc": {
+   ..
+  },
+  "ledgerType": "iota@1.0",
+  "metaInfo" {
+    ...
+  }
+}
+```
+
+#### Attributes
+* `label` - required attribute, n-wise name;
+* `creatorNickname` - required attribute, creator nickname;
+* `creatorDid` - required attribute, - DID of the creator;
+* `creatorDidDoc` - required attribute, - DID Document of the creator;
+* `ledgerType` - required attribute, n-wise registry type;
+* `metaInfo` optional attribute, - additional n-wise meta information; the format is determined by a particular n-wise state implementation;
+
+`genesisTx` transaction MUST be signed by the creator's public key defined in his DID Document.
+
+### InvitationTx
+
+This transaction adds invitation public keys to the n-wise registry.
+
+```json
+{
+  "type": "invitationTx",
+  "publicKey": [
+    {
+      "id": "invitationVerkeyForBob",
+      "type": "Ed25519VerificationKey2018",
+      "publicKeyBase58": "arekhj893yh3489qh"
+    }
+  ]
+}
+```
+#### Attributes
+* `publicKey` - required attribute, array of invitation public keys;
+* `id` - required attribute, invitation public key ID;
+* `type` - required attribute, key type;
+* `publicKeyBase58` - required attribute, Base58 encoded public key.
+
+invitationTx` MUST be signed by the user's public key defined in its DID Document.
+
+### Invitation message
+
+The message is intended to invite a new participant. It is sent via an arbitrary communication channel (pairwise, qr code, e-mail, etc.).
+ 
+```json
+{
+  "@id": "5678876542345",
+  "@type": "https://didcomm.org/n-wise/1.0/invitation",
+  "label": "Invitaion to join n-wise",
+  "invitationKeyId": "invitationVerkeyForBob",
+  "invitationPrivateKeyBase58": "qAue25rghuFRhrue....",
+  "ledgerType": "iota@1.0",
+  "ledger~attach": [
+    {
+      "@id": "attachment id",
+      "mime-type": "application/json",
+      "data": {
+        "base64": "<bytes for base64>"
+      }
+    }  
+  ]
+}
+```
+#### Attributes
+* `label` - optional attribute, human readable invitation text;
+* `invitationKeyId` - required attribute, invitation key ID;
+* `invitationPrivateKeyBase58`- required attribute, Base58 encoded invitation private key;
+* `ledgerType` - required attribute, n-wise registry type;
+* `ledger~attach` - optional attribute, attachment with meta information, required for connection to n-wise registry. Defined by a particular registry implementation.
 
 ### Messages
 
