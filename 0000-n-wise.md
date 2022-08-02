@@ -195,6 +195,7 @@ This transaction adds invitation public keys to the n-wise registry.
     }
   ]
 }
+
 ```
 #### Attributes
 * `publicKey` - required attribute, array of invitation public keys;
@@ -226,6 +227,7 @@ The message is intended to invite a new participant. It is sent via an arbitrary
     }  
   ]
 }
+
 ```
 #### Attributes
 * `label` - optional attribute, human readable invitation text;
@@ -233,6 +235,125 @@ The message is intended to invite a new participant. It is sent via an arbitrary
 * `invitationPrivateKeyBase58`- required attribute, Base58 encoded invitation private key;
 * `ledgerType` - required attribute, n-wise registry type;
 * `ledger~attach` - optional attribute, attachment with meta information, required for connection to n-wise registry. Defined by a particular registry implementation.
+
+### AddParticipantTx
+
+The transaction is designed to add a new user to n-wise.
+
+```json
+{
+  "id": "addParticipantTx",
+  "nickname": "Bob",
+  "did": "did:bob",
+  "didDoc": {
+    ...
+  }
+  
+}
+
+```
+#### Attributes
+* `nickname` - required attribute, user nickname;
+* `did` - required attribute, user's DID;
+* `didDoc` - required attribute, user's DID Document.
+
+`AddParticipantTx` transaction MUST be signed by invitation private key  `invitationPrivateKeyBase58`, received with `Invitation` message. As pushing the `AddParticipantTx` transaction, the corresponding invitation key pair is considered deactivated (other invitations cannot be signed by it).
+
+The transaction executor MUST verify if the invitation key was indeed previously added. Execution of the transaction entails the addition of a new party.
+
+## UpdateParticipantTx
+
+The transaction is intended to update information about the participant.
+
+```json
+{
+  "type": "updateParticipantTx",
+  "did": "did:bob",
+  "nickname": "Updated Bob",
+  "didDoc" {
+    ...
+  }
+}
+
+```
+#### Attributes
+* `did` - requred attribute - DID of the updating user;
+* `nickname` - optional attribute, new user's nickname;
+* `didDoc` - optional attribute, - new user's DID document.
+
+Transaction MUST be signed by the public key of the user being updated The specified public key MUST be defined in the previous version of the DID Document.
+
+Execution of the transaction entails updating information about the participant.
+
+### RemoveParticipantTx
+
+The transaction is designed to remove a party from n-wise.
+
+```json
+{
+  "type": "removeParticipantTx",
+  "did": "did:bob"
+}
+```
+#### Attributes
+* `did` - requred attribute - DID of the removing user;
+
+The execution of the transaction entails the removal of the user and his DID Document from the list of n-wise parties.
+
+The transaction MUST be signed by the public key of the user who is going to be removed from n-wise, or with the public key of the owner.
+
+### UpdateMetadataTx
+
+The transaction is intended to update the meta-information about n-wise.
+
+```json
+{
+	"type": "updateMetadataTx",
+	"label": "Updated Council"
+	"metaInfo": {
+	  ...
+	}
+}
+```
+
+#### Attributes
+* `label` - optional attribute, new n-wise name;
+* `metaInfo` - - optional attribute, new n-wise meta-information.
+
+The transaction MUST be signed by the owner's public key.
+
+### NewOwnerTx
+
+The transaction is intended to transfer owner rights to another user. The old owner simultaneously becomes a regular user.
+
+```json
+{
+	"type": "newOwnerTx",
+	"did": "did:bob"
+}
+```
+
+#### Attributes
+* `did` required attribute, new owner's DID.
+
+The transaction MUST be signed by the owner's public key.
+
+### LedgerUpdateNotify
+
+The message is intended to notify participants about the  modifications of the n-wise state.
+
+```json
+{
+  "@id": "4287428424",
+  "@type": "https://didcomm.org/n-wise/1.0/ledger-update-notify"
+}
+```
+
+## Drawbacks
+
+External DLT is required.
+
+
 
 ### Messages
 
