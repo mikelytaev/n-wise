@@ -147,7 +147,7 @@ N-wise state is modified using transactions.
 
 #### Attributes
 * `type` - required attribute, type of transaction;
-* `proof` - required attribute, transaction signature in [JSON-LD Proof](https://w3c-ccg.github.io/data-integrity-spec/) format;
+* `proof` - required attribute, transaction signature in [JSON-LD Proof](https://w3c-ccg.github.io/data-integrity-spec/) format;
 * `verificationMethod` - required attribute, depends on the specific type of transaction and is defined below.
 
 ### GenesisTx
