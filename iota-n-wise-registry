@@ -1,0 +1,15 @@
+# IOTA n-wise registry
+
+Данный документ предлагает способ ведения реестра состояний n-wise при помощи IOTA Ledger.
+
+## Create n-wise registry
+
+tag
+
+## Commit transaction
+
+set message tag
+
+## Transactions ordering
+
+Simular to IOTA DID Method.
