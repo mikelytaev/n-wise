@@ -7,7 +7,7 @@
 - Supersedes:
 - Start Date: 2022-06-03
 - Tags: [feature](/tags.md#feature), [protocol](/tags.md#protocol)
-- URI: https://didcomm.org/your_protocol_name/%VER
+- URI: https://didcomm.org/n-wise/1.0
 
 ## Summary
 
@@ -351,178 +351,28 @@ The message is intended to notify participants about the  modifications of the n
 
 ## Drawbacks
 
-External DLT is required.
-
-
-
-### Messages
-
-This section describes each message in the protocol. It should also note the names and
-versions of messages from other message families that are adopted by the
-protocol (e.g., an [`ack`](https://github.com/hyperledger/aries-rfcs/tree/main/features/0015-acks)
-or a [`problem-report`](https://github.com/hyperledger/aries-rfcs/tree/main/features/0035-report-problem)).
-Typically this section is written as a narrative, showing each message
-type in the context of an end-to-end sample interaction. All possible
-fields may not appear; an exhaustive catalog is saved for the "Reference"
-section.
-
-Sample messages that are presented in the narrative should also be checked
-in next to the markdown of the RFC, in [DIDComm Plaintext format](
-https://github.com/hyperledger/aries-rfcs/tree/main/features/0044-didcomm-file-and-mime-types#didcomm-messages-dm).
-
-The _message_ element of a message type URI are typically lower_camel_case or lower-kebab-case, matching
-the style of the protocol. JSON items in messages are lower_camel_case and inconsistency in the
-application of a style within a message is frowned upon by the community.
-
-#### Adopted Messages
-
-Many protocols should use general-purpose messages such as [`ack`](
-https://github.com/hyperledger/indy-hipe/pull/77) and [`problem-report`](
-https://github.com/hyperledger/indy-hipe/pull/65)) at certain points in
-an interaction. This reuse is strongly encouraged because it helps us avoid
-defining redundant message types--and the code to handle them--over and
-over again (see [DRY principle](https://en.wikipedia.org/wiki/Don't_repeat_yourself)).
-
-However, using messages with generic values of `@type` (e.g., `"@type":
-"https://didcomm.org/notification/1.0/ack"`)
-introduces a challenge for agents as they route messages to their internal
-routines for handling. We expect internal handlers to be organized around
-protocols, since a protocol is a discrete unit of business value as well
-as a unit of testing in our agent test suite. Early work on agents has
-gravitated towards pluggable, routable protocols as a unit of code
-encapsulation and dependency as well. Thus the natural routing question
-inside an agent, when it sees a message, is "Which protocol handler should
-I route this message to, based on its @type?" A generic `ack` can't be
-routed this way.
-
-Therefore, we allow a protocol to __adopt__ messages into its namespace.
-This works very much like python's `from module import symbol` syntax.
-It changes the `@type` attribute of the adopted message. Suppose a `rendezvous`
-protocol is identified by the URI `https://didcomm.org/rendezvous/2.0`,
-and its definition announces that it has adopted generic 1.x `ack`
-messages. When such `ack` messages are sent, the `@type` should now use
-the alias defined inside the namespace of the `rendezvous` protocol:
-
-[![diff on @type caused by adoption](concepts/0003-protocols/adoption.png)](https://docs.google.com/presentation/d/15UAkh_2WfDk7wlto7pSL7YU9NJr_XVMgGAOeNIRbzK8/edit#slide=id.g9e66a1f72d_0_0)
-
-Adoption should be declared in an "Adopted" subsection of "Messages".
-When adoption is specified, it should include a __minimum
-adopted version__ of the adopted message type: "This protocol adopts
-`ack` with version >= 1.4". All versions of the adopted message that share
-the same major number should be compatible, given the [semver rules](concepts/0003-protocols/semver.md)
-that apply to protocols.
-
-### Constraints
-
-Many protocols have constraints that help parties build trust.
-For example, in buying a house, the protocol includes such things as
-commission paid to realtors to guarantee their incentives, title insurance,
-earnest money, and a phase of the process where a home inspection takes
-place. If you are documenting a protocol that has attributes like
-these, explain them here. If not, the section can be omitted.
-
-## Reference
-
-All of the sections of reference are optional. If none are needed, the
-"Reference" section can be deleted.
-
-### Messages Details
-
-Unless the "Messages" section under "Tutorial" covered everything that
-needs to be known about all message fields, this is where the data type,
-validation rules, and semantics of each field in each message type are
-details. Enumerating possible values, or providing ABNF or regexes is
-encouraged. Following conventions such as [those for date-
-and time-related fields](https://github.com/hyperledger/aries-rfcs/tree/main/concepts/0074-didcomm-best-practices#date-time-conventions)
-can save a lot of time here.
-
-Each message type should be associated with one or more roles in the 
-protocol. That is, it should be clear which roles can send and receive
-which message types.
-
-If the "Tutorial" section covers everything about the messages, this
-section should be deleted.
-
-### Examples
-
-This section is optional. It can be used to show alternate flows through
-the protocol.
-
-### Collateral
-
-This section is optional. It could be used to reference files, code,
-relevant standards, oracles, test suites, or other artifacts that would
-be useful to an implementer. In general, collateral should be checked in
-with the RFC.
-
-### Localization
-
-If communication in the protocol involves humans, then localization of
-message content may be relevant. Default settings for localization of
-all messages in the protocol can be specified in an `l10n.json` file
-described here and checked in with the RFC. See ["Decorators at Message
-Type Scope"](https://github.com/hyperledger/aries-rfcs/tree/main/concepts/0011-decorators#decorator-scope)
-in the [Localization RFC](https://github.com/hyperledger/aries-rfcs/tree/main/features/0043-l10n).
-
-### Codes Catalog
-
-If the protocol has a formally defined catalog of codes (e.g., for errors
-or for statuses), define them in this section. See ["Message Codes and
-Catalogs"](https://github.com/hyperledger/aries-rfcs/blob/main/features/0043-l10n/README.md#message-codes-and-catalogs)
-in the [Localization RFC](https://github.com/hyperledger/aries-rfcs/blob/main/features/0043-l10n).
-
-## Drawbacks
-
-Why should we *not* do this?
+- External DLT is required;
+- The user hierarchy is quite primitive.
 
 ## Rationale and alternatives
+Public DID methods use blockchain networks or other public storages for its DID Documents. [Peer DID](https://identity.foundation/peer-did-method-spec/) Peer DID rejects the use of external storage, which is absolutely justified for a pairwise relationship, since a DID Document can be stored by the other participant. If there are more than two participants, consensus on the n-wise state between participants is required. N-wise is  somewhat of a middle ground between a peer DID (DID document is stored only by a partner) and a public DID (DID document should be available to everyone in the internet). So, the concept of n-wise state registry was introduced in this RFC, and its specific implementations (consensus between participants or a third-party trusted registry) remain at the discretion of the  n-wise creator. The concept of [microledger](https://github.com/the-human-colossus-foundation/microledger-spec/blob/main/microledger.md) is also considerable to use for the n-wise state registry.
 
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not
-choosing them?
-- What is the impact of not doing this?
+One more promising high-level concept for building n-wise protocols is
+[Gossyp](https://github.com/dhh1128/didcomm.org/tree/gossyp/gossyp).
 
 ## Prior art
 
-Discuss prior art, both the good and the bad, in relation to this proposal.
-A few examples of what this can include are:
-
-- Does this feature exist in other SSI ecosystems and what experience have
-their community had?
-- For other teams: What lessons can we learn from other attempts?
-- Papers: Are there any published papers or great posts that discuss this?
-If you have some relevant papers to refer to, this can serve as a more detailed
-theoretical background.
-
-This section is intended to encourage you as an author to think about the
-lessons from other implementers, provide readers of your proposal with a
-fuller picture. If there is no prior art, that is fine - your ideas are
-interesting to us whether they are brand new or if they are an adaptation
-from other communities.
-
-Note that while precedent set by other communities is some motivation, it
-does not on its own motivate an enhancement proposal here. Please also take
-into consideration that Aries sometimes intentionally diverges from common
-identity features.
+The term of n-wise was proposed in [Peer DID](https://identity.foundation/peer-did-method-spec/) specification, and previously discussed in [document](https://docs.google.com/document/d/1BjYdivGQ9GxIz9CJ2ymNvMA68uHZm8bFOTyCHDmziOU/edit#). However, no strict formalization of this process was proposed, as well as the need for consensus between the participants was not noted.
 
 ## Unresolved questions
 
-- What parts of the design do you expect to resolve through the
-enhancement proposal process before this gets merged?
-- What parts of the design do you expect to resolve through the
-implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this 
-proposal that could be addressed in the future independently of the
-solution that comes out of this doc?
+* Who should be responsible for the order of transactions?
+* How to define specific n-wise state registry implementations (separate RFCs?);
+* How to make a flexible user hierarchy?
 
 ## Implementations
-
-> NOTE: This section should remain in the RFC as is on first release. Remove this note and leave the rest of the text as is. Template text in all other sections should be removed before submitting your Pull Request.
-
 The following lists the implementations (if any) of this RFC. Please do a pull request to add your implementation. If the implementation is open source, include a link to the repo or to the implementation within the repo. Please be consistent in the "Name" field so that a mechanical processing of the RFCs can generate a list of all RFCs supported by an Aries implementation.
-
-*Implementation Notes* [may need to include a link to test results](/README.md#accepted).
 
 Name / Link | Implementation Notes
 --- | ---
- |
+[Sirius SDK Java](https://github.com/Sirius-social/sirius-sdk-java/) | [IOTA Ledger](https://www.iota.org/) based implementation 
