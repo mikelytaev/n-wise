@@ -110,7 +110,6 @@ Owner может передать управление n-wise другому у�
     "type": "JcsEd25519Signature2020",
     "verificationMethod": "did:alice#key1",
     "signatureValue": "..."
-
   }
 }
 ```
