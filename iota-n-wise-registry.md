@@ -2,9 +2,9 @@
 
 This document describes a method of implementing a registry of n-wise states using the [IOTA Ledger](https://www.iota.org/).
 
-## Create n-wise registry
+## N-wise registry creation
 
-To create a new n-wise, creator writes the following message to IOTA tangle
+To create a new n-wise, creator writes the following message to the IOTA tangle
  
  ```json
 {
@@ -37,7 +37,7 @@ To create a new n-wise, creator writes the following message to IOTA tangle
 }
  ```
 
- ## Тег
+ ## Tag
 
 All messages added to the IOTA Tangle are indexed by the tag. The tag is computed from the creator's verkey, defined in genesisTx. The procedure is presented in [IOTA DID Method](https://wiki.iota.org/identity.rs/specs/did/iota_did_method_spec#iota-tag). All further transactions are also indexed by this tag.
 
@@ -62,11 +62,11 @@ The commit of a new transaction to the n-wise registry is carried out by adding 
 
  - `previousMessageId` (required for all transactions, except GenesisTx): IOTA MessageId for the previous transaction.
 
-## Transactions ordering
+## Transactions execution
 
-N-wise party receives list of n-wise transactions by the tag.
+N-wise party receives a list of n-wise transactions by the tag.
 The order of transactions and resolution of collisions is carried out following [IOTA DID Method](https://wiki.iota.org/identity.rs/specs/did/iota_did_method_spec).
 
 ## Implementations
 
-[Sirius Java-SDK](https://github.com/Sirius-social/sirius-sdk-java/blob/master/src/test/java/TestNWise.java). 
+[Sirius SDK-Java](https://github.com/Sirius-social/sirius-sdk-java/blob/master/src/test/java/TestNWise.java)
